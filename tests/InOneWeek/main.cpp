@@ -8,7 +8,6 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <unistd.h>
 
 inline Ray getRay(Camera &cam, size_t x, size_t y) {
   return Ray{cam.orig_, cam.higherLeftCorner + static_cast<double>(x) * cam.u +
