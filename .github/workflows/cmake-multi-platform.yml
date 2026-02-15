@@ -4,9 +4,9 @@ name: CMake on multiple platforms
 
 on:
   push:
-    branches: [ "main", "workflow-test" ]
+    branches: [ "main", "dev", "workflow-test" ]
   pull_request:
-    branches: [ "main", "workflow-test" ]
+    branches: [ "main", "dev", "workflow-test" ]
 
 jobs:
   build:
