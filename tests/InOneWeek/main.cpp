@@ -27,18 +27,19 @@ HittableList world;
 
 Vec3 rayColor(size_t depth, Ray r, Vec3 attenuation, HitInfo hitInf) {
 
-  if (depth == 100)
-    return {0, 0, 0};
+  if (depth == 10000000)
+    return {1, 0, 0}; // depth over flow
   depth++;
 
   Ray scattered;
   bool hit = world.hit(r, 0.001, 100000000, hitInf);
   if (hit) {
-    hitInf.mat->scatter(r, hitInf, attenuation, scattered);
-    return 0.5 * rayColor(depth, scattered, attenuation, hitInf);
+    if (hitInf.mat->scatter(r, hitInf, attenuation, scattered))
+      return attenuation * rayColor(depth, scattered, attenuation, hitInf);
   } else {
     return {0, 1, 1};
   }
+  return {1, 0, 1}; // ray outward error
 }
 
 // constants
@@ -56,7 +57,9 @@ int main(int argc, char *argv[]) {
              Vec3{0, -1, 0}, Vec3{0, 0, 1}, 100);
 
   world.add(
-      std::make_shared<Sphere>(Vec3{0, -1, 0}, 1, std::make_shared<Lambert>()));
+      std::make_shared<Sphere>(Vec3{1, -1, 0}, 1, std::make_shared<Metal>()));
+  world.add(std::make_shared<Sphere>(Vec3{-1, -1, 0}, 1,
+                                     std::make_shared<Lambert>()));
 
   world.add(std::make_shared<Plane>(Vec3{0, 0, 0}, Vec3{0, -1, 0},
                                     std::make_shared<Lambert>()));
