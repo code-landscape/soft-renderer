@@ -77,7 +77,7 @@ private:
   std::shared_ptr<Material> mat_;
 };
 
-class Plane final : public Hittable {
+class Plane final : public Hittable { // FIXME: self cross issue
 public:
   Plane(Vec3 center, Vec3 normal, std::shared_ptr<Material> mat)
       : center_(center), normal_(normalize(normal)), mat_(mat) {}
@@ -110,19 +110,26 @@ public:
                        Ray &scattered) const = 0;
 };
 
-class Sky final : public Material {
-  bool scatter(const Ray &rIn, const HitInfo &hitInf, Vec3 &attenuation,
-               Ray &scattered) const {
-    return true;
-  }
-};
-
 class Lambert final : public Material {
 public:
   bool scatter(const Ray &rIn, const HitInfo &hitInf, Vec3 &attenuation,
                Ray &scattered) const final {
-    scattered = {hitInf.p + 0.001 * hitInf.n,
-                 hitInf.n + Vec3(sphericalRand(1.0f))};
+    attenuation = {0.5, 0.5, 0.5};
+    scattered = {hitInf.p, hitInf.n + Vec3(sphericalRand(1.0f))};
+    if (dot(scattered.dir_, hitInf.n) < 0)
+      return false;
+    return true;
+  }
+};
+
+class Metal final : public Material {
+public:
+  bool scatter(const Ray &rIn, const HitInfo &hitInf, Vec3 &attenuation,
+               Ray &scattered) const final {
+    scattered = {hitInf.p + 0.1 * hitInf.n,
+                 reflect(normalize(rIn.dir_), hitInf.n)};
+    if (dot(scattered.dir_, hitInf.n) < 0)
+      return false;
     return true;
   }
 };
