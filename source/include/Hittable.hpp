@@ -110,9 +110,11 @@ public:
                        Ray &scattered) const = 0;
 };
 
-class Sky final : public Material {
+class Metal final : public Material {
   bool scatter(const Ray &rIn, const HitInfo &hitInf, Vec3 &attenuation,
                Ray &scattered) const {
+    Vec3 reflected = normalize(reflect(rIn.dir_, hitInf.n));
+    scattered = {hitInf.p + 0.05 * reflected, reflected};
     return true;
   }
 };
@@ -121,6 +123,7 @@ class Lambert final : public Material {
 public:
   bool scatter(const Ray &rIn, const HitInfo &hitInf, Vec3 &attenuation,
                Ray &scattered) const final {
+    attenuation = {0.75, 0.75, 0.75};
     scattered = {hitInf.p + 0.001 * hitInf.n,
                  hitInf.n + Vec3(sphericalRand(1.0f))};
     return true;

@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <memory>
 
 inline Ray getRay(Camera &cam, size_t x, size_t y) {
@@ -27,18 +28,19 @@ HittableList world;
 
 Vec3 rayColor(size_t depth, Ray r, Vec3 attenuation, HitInfo hitInf) {
 
-  if (depth == 100)
-    return {0, 0, 0};
+  if (depth == 1000)
+    return {1, 0, 1};
   depth++;
 
   Ray scattered;
-  bool hit = world.hit(r, 0.001, 100000000, hitInf);
+  bool hit = world.hit(r, 0.001, std::numeric_limits<double>::max(), hitInf);
   if (hit) {
-    hitInf.mat->scatter(r, hitInf, attenuation, scattered);
-    return 0.5 * rayColor(depth, scattered, attenuation, hitInf);
+    if (hitInf.mat->scatter(r, hitInf, attenuation, scattered))
+      return attenuation * rayColor(depth, scattered, attenuation, hitInf);
   } else {
     return {0, 1, 1};
   }
+  return {1, 0, 0};
 }
 
 // constants
@@ -52,17 +54,20 @@ int main(int argc, char *argv[]) {
   Imagefile << "P6\n" << IMAGE_WIDTH << ' ' << IMAGE_HEIGHT << "\n255\n";
 
   // camera
-  Camera cam(Vec3{0, -1, -5}, 1.6, 0.9, IMAGE_WIDTH, IMAGE_HEIGHT, 0.8,
-             Vec3{0, -1, 0}, Vec3{0, 0, 1}, 100);
+  Camera cam(Vec3{0, -15, -20}, 1.6, 0.9, IMAGE_WIDTH, IMAGE_HEIGHT, 0.8,
+             Vec3{0, -1, 0}, Vec3{0, 0.75, 1}, 100);
 
-  world.add(
-      std::make_shared<Sphere>(Vec3{0, -1, 0}, 1, std::make_shared<Lambert>()));
+  world.add(std::make_shared<Sphere>(Vec3{-5.5, -5, 0}, 5,
+                                     std::make_shared<Lambert>()));
+  // world.add(std::make_shared<Sphere>(Vec3{5.5, -5, 0}, 5,
+  //                                    std::make_shared<Lambert>()));
 
   world.add(std::make_shared<Plane>(Vec3{0, 0, 0}, Vec3{0, -1, 0},
-                                    std::make_shared<Lambert>()));
+                                    std::make_shared<Metal>()));
 
   // for loops
   for (size_t y{0}; y != IMAGE_HEIGHT; y++) {
+    std::clog << "\r" << y;
     for (size_t x{0}; x != IMAGE_WIDTH; x++) {
       Vec3 attenuation{1, 1, 1};
       HitInfo hitInf;
