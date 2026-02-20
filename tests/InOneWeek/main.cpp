@@ -26,17 +26,18 @@ void writeColor(const Vec3 &col, std::ofstream &file) {
 
 HittableList world;
 
-Vec3 rayColor(size_t depth, Ray r, Vec3 attenuation, HitInfo hitInf) {
+Vec3 rayColor(size_t depth, Ray r, Vec3 attenuation) {
 
   if (depth == 1000)
     return {1, 0, 1};
   depth++;
 
   Ray scattered;
+  HitInfo hitInf {};
   bool hit = world.hit(r, 0.001, std::numeric_limits<double>::max(), hitInf);
   if (hit) {
     if (hitInf.mat->scatter(r, hitInf, attenuation, scattered))
-      return attenuation * rayColor(depth, scattered, attenuation, hitInf);
+      return attenuation * rayColor(depth, scattered, attenuation);
   } else {
     return {0, 1, 1};
   }
@@ -70,8 +71,7 @@ int main(int argc, char *argv[]) {
     std::clog << "\r" << y;
     for (size_t x{0}; x != IMAGE_WIDTH; x++) {
       Vec3 attenuation{1, 1, 1};
-      HitInfo hitInf;
-      writeColor(rayColor(0, cam.getRay(x, y), attenuation, hitInf), Imagefile);
+      writeColor(rayColor(0, cam.getRay(x, y), attenuation), Imagefile);
     }
   }
 
