@@ -2,12 +2,12 @@
 
 #include "Ray.hpp"
 #include "Vector.hpp"
+#include "Random.hpp"
 #include <cmath>
 #include <limits>
 #include <memory>
 #include <vector>
 
-inline double randomDouble() { return std::rand() / (RAND_MAX + 1.0); }
 
 class Material;
 class HitInfo {
@@ -15,7 +15,7 @@ public:
   Vec3 p, n;
   double t{std::numeric_limits<double>::infinity()};
   bool frontFace;
-  std::shared_ptr<Material> mat;
+  Material *mat;
 };
 
 class Hittable {
@@ -70,7 +70,7 @@ public:
       hitInf.frontFace = dot(r.dir_, hitInf.n) < 0;
       if (!hitInf.frontFace)
         hitInf.n = -hitInf.n;
-      hitInf.mat = mat_;
+      hitInf.mat = mat_.get();
     }
     return true;
   }
@@ -97,7 +97,7 @@ public:
       hitInf.frontFace = dot(r.dir_, hitInf.n) < 0;
       if (!hitInf.frontFace)
         hitInf.n = -hitInf.n;
-      hitInf.mat = mat_;
+      hitInf.mat = mat_.get();
     }
     return true;
   }
