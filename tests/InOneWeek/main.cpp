@@ -9,6 +9,8 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <execution>
+#include <ranges>
 
 inline Ray getRay(Camera &cam, size_t x, size_t y) {
   return Ray{cam.orig_, cam.higherLeftCorner + static_cast<double>(x) * cam.u +
@@ -85,18 +87,29 @@ int main(int argc, char *argv[]) {
                                     std::make_shared<Lambert>()));
 
   // for loops
-  std::vector<uint8_t> buffer(3 * IMAGE_WIDTH * IMAGE_HEIGHT);
-  for (size_t y{0}; y != IMAGE_HEIGHT; y++) {
-    std::clog << "\r" << y;
-    for (size_t x{0}; x != IMAGE_WIDTH; x++) {
+  std::vector<uint8_t> buffer(3uz * IMAGE_WIDTH * IMAGE_HEIGHT);
+  auto buffer_range = std::views::iota(0uz, IMAGE_WIDTH * IMAGE_HEIGHT);
+  std::atomic<size_t> progress = 0;
+  std::for_each(
+  #ifdef HAS_TBB
+    std::execution::par,
+  #else
+    std::execution::seq,
+  #endif
+    buffer_range.begin(), buffer_range.end(),
+    [&, ptr=buffer.data()](size_t index) {
+      size_t x = index % IMAGE_WIDTH;
+      size_t y = index / IMAGE_WIDTH;
+      if (x == 0) {
+        std::clog << "\r" << progress.fetch_add(1);
+      }
+
       Vec3 attenuation{1, 1, 1};
       Vec3 color = rayColor(0, cam.getRay(x, y), attenuation);
-      size_t index = y * IMAGE_WIDTH + x;
-      buffer[index + 0] = toByte(color.r);
-      buffer[index + 1] = toByte(color.g);
-      buffer[index + 2] = toByte(color.b);
-    }
-  }
+      *(ptr + (index * 3 + 0)) = toByte(color.r);
+      *(ptr + (index * 3 + 1)) = toByte(color.g);
+      *(ptr + (index * 3 + 2)) = toByte(color.b);
+    });
   Imagefile.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
 
   Imagefile.close();
