@@ -136,7 +136,7 @@ public:
 class Dielectric final : public Material {
   bool scatter(const Ray &r, const HitInfo &hitInf, Vec3 &attenuation,
                Ray &scattered) const {
-    double ri = hitInf.frontFace ? 1.5 : 1 / 1.5;
+    double ri = hitInf.frontFace ? 1 / 1.5 : 1.5;
 
     double cosTheta = fmin(1.0f, dot(-normalize(r.dir_), hitInf.n));
     double sinTheta = sqrt(1 - cosTheta * cosTheta);
@@ -147,8 +147,8 @@ class Dielectric final : public Material {
       return true;
     }
 
-    Vec3 reflected = normalize(refract(-normalize(r.dir_), hitInf.n, ri));
-    scattered = {hitInf.p, reflected};
+    Vec3 refraction = normalize(refract(normalize(r.dir_), hitInf.n, ri));
+    scattered = {hitInf.p, refraction};
     return true;
   }
 
