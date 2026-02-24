@@ -9,19 +9,16 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <execution>
+#include <ranges>
 
 inline Ray getRay(Camera &cam, size_t x, size_t y) {
   return Ray{cam.orig_, cam.higherLeftCorner + static_cast<double>(x) * cam.u +
                             static_cast<double>(y) * cam.v};
 }
 
-void writeColor(const Vec3 &col, std::ofstream &file) {
-  uint8_t r = int(col.r * 255.999);
-  uint8_t g = int(col.g * 255.999);
-  uint8_t b = int(col.b * 255.999);
-  file.write(reinterpret_cast<char *>(&r), 1);
-  file.write(reinterpret_cast<char *>(&g), 1);
-  file.write(reinterpret_cast<char *>(&b), 1);
+uint8_t toByte(double col) {
+  return int(col * 255.999);
 }
 
 HittableList world;
@@ -90,13 +87,30 @@ int main(int argc, char *argv[]) {
                                     std::make_shared<Lambert>()));
 
   // for loops
-  for (size_t y{0}; y != IMAGE_HEIGHT; y++) {
-    std::clog << "\r" << y;
-    for (size_t x{0}; x != IMAGE_WIDTH; x++) {
+  std::vector<uint8_t> buffer(3uz * IMAGE_WIDTH * IMAGE_HEIGHT);
+  auto buffer_range = std::views::iota(0uz, IMAGE_WIDTH * IMAGE_HEIGHT);
+  std::atomic<size_t> progress = 0;
+  std::for_each(
+  #ifdef HAS_TBB
+    std::execution::par,
+  #else
+    std::execution::seq,
+  #endif
+    buffer_range.begin(), buffer_range.end(),
+    [&](size_t index) {
+      size_t x = index % IMAGE_WIDTH;
+      size_t y = index / IMAGE_WIDTH;
+      if (x == 0) {
+        std::clog << "\r" << progress.fetch_add(1);
+      }
+
       Vec3 attenuation{1, 1, 1};
-      writeColor(rayColor(0, cam.getRay(x, y), attenuation), Imagefile);
-    }
-  }
+      Vec3 color = rayColor(0, cam.getRay(x, y), attenuation);
+      buffer[index * 3 + 0] = toByte(color.r);
+      buffer[index * 3 + 1] = toByte(color.g);
+      buffer[index * 3 + 2] = toByte(color.b);
+    });
+  Imagefile.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
 
   Imagefile.close();
   return 0;

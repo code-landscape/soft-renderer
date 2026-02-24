@@ -12,4 +12,3 @@ using glm::dot;
 using glm::normalize;
 using glm::reflect;
 using glm::refract;
-using glm::sphericalRand;

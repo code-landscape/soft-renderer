@@ -58,6 +58,15 @@ add_executable(
   ./InOneWeek/main.cpp
 )
 
+find_package(TBB QUIET)
+if (TBB_FOUND)
+  target_compile_definitions(InOneWeek PRIVATE HAS_TBB)
+  target_link_libraries(
+    InOneWeek
+    TBB::tbb
+  )
+endif()
+
 target_link_libraries(
   InOneWeek
   RayChasing
