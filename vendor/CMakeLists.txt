@@ -20,4 +20,4 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(spdlog)
 
 #tbb
-findpackage(TBB REQUIRED)
+find_package(TBB REQUIRED)
