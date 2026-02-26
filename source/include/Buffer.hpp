@@ -15,5 +15,13 @@ public:
 };
 
 template <size_t imageWidthT, size_t imageHeightT>
-class ImageBuffer final
-    : public Buffer<uint8_t, 3 * imageWidthT * imageHeightT> {};
+class RGBBuffer final : public Buffer<uint8_t, 3 * imageWidthT * imageHeightT> {
+};
+
+class Tile final {
+  Tile(size_t fromX, size_t fromY, size_t width, size_t height)
+      : fromX_(fromX), fromY_(fromY), width_(width), height_(height) {}
+
+private:
+  size_t fromX_, fromY_, width_, height_;
+};

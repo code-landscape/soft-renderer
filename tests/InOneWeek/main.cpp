@@ -3,8 +3,8 @@
 #include "Camera.hpp"
 #include "Hittable.hpp"
 #include "Ray.hpp"
+#include "Renderer.hpp"
 #include "Vector.hpp"
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -17,7 +17,7 @@ inline Ray getRay(Camera &cam, size_t x, size_t y) {
                             static_cast<double>(y) * cam.v};
 }
 
-uint8_t toByte(double col) { return int(col * 255.999); }
+// uint8_t toByte(double col) { return int(col * 255.999); }
 
 HittableList world;
 
@@ -67,36 +67,27 @@ int main(int argc, char *argv[]) {
 
   world.add(std::make_shared<Sphere>(
       Vec3{
-          10.1,
-          -5.0001,
           0,
+          -3.0001,
+          -15,
       },
-      5, std::make_shared<Metal>()));
+      3, std::make_shared<Dielectric>()));
 
   world.add(std::make_shared<Sphere>(
       Vec3{
-          3,
-          -6.0001,
-          -10.0001,
+          -9,
+          -4.0001,
+          0,
       },
-      6, std::make_shared<Dielectric>()));
+      4, std::make_shared<Metal>()));
 
   world.add(std::make_shared<Plane>(Vec3{0, 0, 0}, Vec3{0, -1, 0},
                                     std::make_shared<Lambert>()));
 
   // for loops
-  ImageBuffer<IMAGE_WIDTH, IMAGE_HEIGHT> imageBuffer;
-  for (size_t y{0}; y != IMAGE_HEIGHT; y++) {
-    std::clog << "\r" << y;
-    for (size_t x{0}; x != IMAGE_WIDTH; x++) {
-      Vec3 attenuation{1, 1, 1};
-      Vec3 color = rayColor(0, cam.getRay(x, y), attenuation);
-      size_t index = (y * IMAGE_WIDTH + x) * 3;
-      imageBuffer[index + 0] = toByte(color.r);
-      imageBuffer[index + 1] = toByte(color.g);
-      imageBuffer[index + 2] = toByte(color.b);
-    }
-  }
+  RGBBuffer<IMAGE_WIDTH, IMAGE_HEIGHT> imageBuffer;
+  CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, imageBuffer);
+  renderer.render();
   Imagefile.write(reinterpret_cast<const char *>(imageBuffer.getData()),
                   imageBuffer.getSize());
   Imagefile.close();

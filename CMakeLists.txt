@@ -16,6 +16,8 @@ add_library(
   ./source/include/Hittable.hpp
   ./source/include/Ray.hpp
   ./source/include/Vector.hpp
+  ./source/include/Renderer.hpp
+  ./source/src/Renderer.cpp
 )
 
 target_link_libraries(
