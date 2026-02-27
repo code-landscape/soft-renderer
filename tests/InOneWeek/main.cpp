@@ -21,8 +21,8 @@ inline Ray getRay(Camera &cam, size_t x, size_t y) {
 HittableList world;
 
 // constants
-constexpr size_t IMAGE_WIDTH{1920};
-constexpr size_t IMAGE_HEIGHT{1080};
+constexpr size_t IMAGE_WIDTH{3840};
+constexpr size_t IMAGE_HEIGHT{2160};
 constexpr size_t SPP{31};
 
 int main(int argc, char *argv[]) {
@@ -62,7 +62,8 @@ int main(int argc, char *argv[]) {
                                     std::make_shared<Lambert>()));
 
   // for loops
-  RGBBuffer<IMAGE_WIDTH, IMAGE_HEIGHT> imageBuffer;
+  auto imageBuffer = *std::make_unique<RGBBuffer<IMAGE_WIDTH, IMAGE_HEIGHT>>();
+
   CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, imageBuffer);
   renderer.render();
   Imagefile.write(reinterpret_cast<const char *>(imageBuffer.getData()),
