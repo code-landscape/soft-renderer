@@ -19,5 +19,3 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
-#tbb
-find_package(TBB REQUIRED)

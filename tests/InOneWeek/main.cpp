@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <fstream>
 #include <iostream>
-#include <limits>
 #include <memory>
 
 inline Ray getRay(Camera &cam, size_t x, size_t y) {
@@ -64,7 +63,7 @@ int main(int argc, char *argv[]) {
   // for loops
   auto imageBuffer = std::make_unique<RGBBuffer<IMAGE_WIDTH, IMAGE_HEIGHT>>();
 
-  CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, *imageBuffer);
+  CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, *imageBuffer, 64);
   renderer.render();
   Imagefile.write(reinterpret_cast<const char *>(imageBuffer->getData()),
                   imageBuffer->getSize());

@@ -10,6 +10,9 @@ project(RayChasing CXX)
 
 add_subdirectory(vendor)
 
+#tbb
+find_package(TBB REQUIRED)
+
 add_library(
   RayChasing
   ./source/include/Camera.hpp
@@ -24,6 +27,7 @@ target_link_libraries(
   RayChasing
   PUBLIC
   glm::glm
+  TBB::tbb
 )
 
 target_include_directories(
