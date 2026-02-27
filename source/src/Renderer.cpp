@@ -3,7 +3,7 @@
 #include <random>
 
 std::random_device rd;
-std::mt19937_64 rng(rd());
+thread_local std::mt19937_64 rng(rd());
 Vec3 rayColor(size_t depth, Ray r, Vec3 attenuation, HittableList &world) {
 
   if (depth == 1000)
