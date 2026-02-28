@@ -18,4 +18,3 @@ FetchContent_Declare(
   GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(spdlog)
-

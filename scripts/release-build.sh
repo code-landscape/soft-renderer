@@ -1,0 +1,5 @@
+
+
+#!/bin/bash
+cmake -S . -B build/ && cmake --build build/ --config release
+./build/tests/InOneWeek

@@ -63,7 +63,8 @@ int main(int argc, char *argv[]) {
   // for loops
   auto imageBuffer = std::make_unique<RGBBuffer<IMAGE_WIDTH, IMAGE_HEIGHT>>();
 
-  CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, *imageBuffer, 64);
+  CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, *imageBuffer,
+                                                  256);
   renderer.render();
   Imagefile.write(reinterpret_cast<const char *>(imageBuffer->getData()),
                   imageBuffer->getSize());

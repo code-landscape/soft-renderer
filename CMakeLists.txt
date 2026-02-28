@@ -21,6 +21,9 @@ add_library(
   ./source/include/Vector.hpp
   ./source/include/Renderer.hpp
   ./source/src/Renderer.cpp
+  ./source/include/pcg/pcg_extras.hpp
+  ./source/include/pcg/pcg_uint128.hpp
+  ./source/include/pcg/pcg_random.hpp
 )
 
 target_link_libraries(
