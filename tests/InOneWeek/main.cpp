@@ -2,20 +2,13 @@
 #include "Buffer.hpp"
 #include "Camera.hpp"
 #include "Hittable.hpp"
-#include "Ray.hpp"
 #include "Renderer.hpp"
 #include "Vector.hpp"
+#include <chrono>
 #include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <memory>
-
-inline Ray getRay(Camera &cam, size_t x, size_t y) {
-  return Ray{cam.orig_, cam.higherLeftCorner + static_cast<double>(x) * cam.u +
-                            static_cast<double>(y) * cam.v};
-}
-
-// uint8_t toByte(double col) { return int(col * 255.999); }
 
 HittableList world;
 
@@ -64,8 +57,17 @@ int main(int argc, char *argv[]) {
   auto imageBuffer = std::make_unique<RGBBuffer<IMAGE_WIDTH, IMAGE_HEIGHT>>();
 
   CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, *imageBuffer,
-                                                  256);
+                                                  4096);
+
+  auto start = std::chrono::high_resolution_clock::now();
+
   renderer.render();
+
+  auto end = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration<double>(end - start).count();
+  std::clog << "time: " << duration << "s\n";
+  ;
+
   Imagefile.write(reinterpret_cast<const char *>(imageBuffer->getData()),
                   imageBuffer->getSize());
   Imagefile.close();

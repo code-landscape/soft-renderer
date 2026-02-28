@@ -18,7 +18,7 @@ public:
       : world_(world), cam_(cam), imageBuffer_(imageBuffer), spp_(spp) {}
   bool render() {
 
-    splitIntoTiles(64, 64, 1);
+    splitIntoTiles(64, 64);
 
     tbb::parallel_for(size_t(0), tiles_.size(), [this](size_t i) {
       renderTile(tiles_[i], cam_, world_);
@@ -33,7 +33,7 @@ private:
   size_t spp_;
   std::vector<Tile> tiles_;
 
-  void splitIntoTiles(size_t tileWidth, size_t tileHeight, size_t spp) {
+  void splitIntoTiles(size_t tileWidth, size_t tileHeight) {
     size_t numTilesX = ceil(static_cast<double>(imageWidthT) / tileWidth);
     size_t numTilesY = ceil(static_cast<double>(imageHeightT) / tileHeight);
     for (size_t tileY{0}; tileY != numTilesY; tileY++) {
