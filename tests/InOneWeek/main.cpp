@@ -4,7 +4,6 @@
 #include "Hittable.hpp"
 #include "Renderer.hpp"
 #include "Vector.hpp"
-#include <chrono>
 #include <cstddef>
 #include <fstream>
 #include <iostream>
@@ -56,17 +55,9 @@ int main(int argc, char *argv[]) {
   // for loops
   auto imageBuffer = std::make_unique<RGBBuffer<IMAGE_WIDTH, IMAGE_HEIGHT>>();
 
-  CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, *imageBuffer,
-                                                  4096);
-
-  auto start = std::chrono::high_resolution_clock::now();
+  CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, *imageBuffer, 60);
 
   renderer.render();
-
-  auto end = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration<double>(end - start).count();
-  std::clog << "time: " << duration << "s\n";
-  ;
 
   Imagefile.write(reinterpret_cast<const char *>(imageBuffer->getData()),
                   imageBuffer->getSize());
