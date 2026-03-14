@@ -1,21 +1,22 @@
 
 #pragma once
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
-template <typename typeT, size_t sizeT> class Buffer {
+template <typename typeT> class Buffer {
 public:
+  Buffer(size_t size) { data_.resize(size); }
   virtual ~Buffer() = default;
-  std::array<typeT, sizeT> data_;
+  std::vector<typeT> data_;
   auto getData() { return data_.data(); }
   auto getSize() { return data_.size(); }
   auto &operator[](size_t i) { return data_[i]; }
 };
 
-template <size_t imageWidthT, size_t imageHeightT>
-class RGBBuffer final : public Buffer<uint8_t, 3 * imageWidthT * imageHeightT> {
+class RGBBuffer final : public Buffer<uint8_t> {
+  using Buffer::Buffer;
 };
 
 class Tile final {

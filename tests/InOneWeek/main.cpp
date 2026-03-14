@@ -53,14 +53,14 @@ int main(int argc, char *argv[]) {
                                     std::make_shared<Lambert>()));
 
   // for loops
-  auto imageBuffer = std::make_unique<RGBBuffer<IMAGE_WIDTH, IMAGE_HEIGHT>>();
+  auto imageBuffer = RGBBuffer(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 
-  CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, *imageBuffer, 60);
+  CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, imageBuffer, 60);
 
   renderer.render();
 
-  Imagefile.write(reinterpret_cast<const char *>(imageBuffer->getData()),
-                  imageBuffer->getSize());
+  Imagefile.write(reinterpret_cast<const char *>(imageBuffer.getData()),
+                  imageBuffer.getSize());
   Imagefile.close();
   return 0;
 }

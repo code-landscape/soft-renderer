@@ -13,8 +13,8 @@ inline uint8_t toByte(double col) { return int(col * 255.999); }
 
 template <size_t imageWidthT, size_t imageHeightT> class CPURenderer {
 public:
-  CPURenderer(HittableList &world, Camera &cam,
-              RGBBuffer<imageWidthT, imageHeightT> &imageBuffer, size_t spp)
+  CPURenderer(HittableList &world, Camera &cam, RGBBuffer &imageBuffer,
+              size_t spp)
       : world_(world), cam_(cam), imageBuffer_(imageBuffer), spp_(spp) {}
   bool render() {
 
@@ -29,7 +29,7 @@ public:
 private:
   HittableList &world_;
   Camera &cam_;
-  RGBBuffer<imageWidthT, imageHeightT> &imageBuffer_;
+  RGBBuffer &imageBuffer_;
   size_t spp_;
   std::vector<Tile> tiles_;
 
