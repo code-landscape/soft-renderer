@@ -19,6 +19,13 @@ class RGBBuffer final : public Buffer<uint8_t> {
   using Buffer::Buffer;
 };
 
+class RGBABuffer : public Buffer<uint32_t> {
+  using Buffer::Buffer;
+
+public:
+  uint32_t &getCol(size_t index) { return this->data_[index]; }
+};
+
 class Tile final {
 public:
   Tile(size_t fromX, size_t fromY, size_t width, size_t height)

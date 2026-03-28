@@ -1,2 +1,4 @@
-a soft-renderer
-for study
+
+# A soft-renderer
+
+just for study

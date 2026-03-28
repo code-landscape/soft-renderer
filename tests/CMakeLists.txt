@@ -29,8 +29,8 @@ file(
   imgui_BACKENDS
   ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.h
   ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-  ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3
-
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.h
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
 )
 
 add_library(
@@ -50,6 +50,12 @@ target_include_directories(
   ${Vulkan_INCLUDE_DIRS}
 )
 
+target_link_libraries(
+  imgui
+  glfw
+  ${Vulkan_LIBRARIES}
+)
+
 project(
   InOneWeek
   CXX
@@ -62,6 +68,22 @@ add_executable(
 
 target_link_libraries(
   InOneWeek
+  RayChasing
+  imgui
+)
+
+project(
+  imgui_viewer
+  CXX
+)
+
+add_executable(
+  imgui_viewer
+  ./imgui_viewer/main.cpp
+)
+
+target_link_libraries(
+  imgui_viewer
   RayChasing
   imgui
 )
