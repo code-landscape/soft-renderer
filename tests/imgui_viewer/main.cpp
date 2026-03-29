@@ -581,15 +581,15 @@ int main(int, char **) {
       ImGui::End();
     }
 
-    VkImageView ImageView;
-    VkImage Image;
-    VkDeviceMemory ImageMemory;
-    VkSampler Sampler;
-    VkBuffer UploadBuffer;
-    VkDeviceMemory UploadBufferMemory;
-
-    auto description_set = ImGui_ImplVulkan_AddTexture(
-        Sampler, ImageView, VK_IMAGE_LAYOUT_UNDEFINED);
+    // VkImageView ImageView;
+    // VkImage Image;
+    // VkDeviceMemory ImageMemory;
+    // VkSampler Sampler;
+    // VkBuffer UploadBuffer;
+    // VkDeviceMemory UploadBufferMemory;
+    //
+    // auto description_set = ImGui_ImplVulkan_AddTexture(
+    //     Sampler, ImageView, VK_IMAGE_LAYOUT_UNDEFINED);
 
     // TODO: add texture
 
