@@ -1,15 +1,6 @@
 
-#glfw
-FetchContent_Declare(
-  glfw
-  GIT_REPOSITORY https://github.com/glfw/glfw.git
-  GIT_TAG master
-  GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(glfw)
-
-#vulkan
-find_package(Vulkan REQUIRED)
+#SDL3
+find_package(SDL3 REQUIRED)
 
 #imgui
 FetchContent_Declare(
@@ -27,10 +18,10 @@ file(GLOB imgui_SOURCES ${imgui_SOURCE_DIR}/*cpp)
 file(
   GLOB
   imgui_BACKENDS
-  ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.h
-  ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-  ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.h
-  ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+  ${imgui_SOURCE_DIR}backends/imgui_impl_sdl3.h
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.h
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp
 )
 
 add_library(
@@ -52,8 +43,7 @@ target_include_directories(
 
 target_link_libraries(
   imgui
-  glfw
-  ${Vulkan_LIBRARIES}
+  ${SDL3_LIBRARIES}
 )
 
 project(
