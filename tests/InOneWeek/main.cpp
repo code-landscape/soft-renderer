@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
   // for loops
   auto imageBuffer = RGBBuffer(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 
-  CPURenderer<IMAGE_WIDTH, IMAGE_HEIGHT> renderer(world, cam, imageBuffer, 60);
+  CPURenderer renderer(IMAGE_WIDTH, IMAGE_HEIGHT, world, cam, imageBuffer, 60);
 
   renderer.render();
 
