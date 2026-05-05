@@ -4,7 +4,6 @@
 #include "Buffer.hpp"
 #include "Camera.hpp"
 #include "Hittable.hpp"
-#include <cstddef>
 #include <tbb/parallel_for.h>
 
 Vec3 rayColor(size_t depth, Ray r, Vec3 attenuation, HittableList &world);
@@ -16,10 +15,11 @@ public:
   CPURenderer(size_t imageWidth, size_t imageHeight, HittableList &world,
               Camera &cam, RGBBuffer &imageBuffer, size_t spp)
       : imageWidth_(imageWidth), imageHeight_(imageHeight), world_(world),
-        cam_(cam), imageBuffer_(imageBuffer), spp_(spp) {}
-  bool render() {
+        cam_(cam), imageBuffer_(imageBuffer), spp_(spp) {
 
     splitIntoTiles(64, 64);
+  }
+  bool render() {
 
     tbb::parallel_for(size_t(0), tiles_.size(), [this](size_t i) {
       renderTile(tiles_[i], cam_, world_);

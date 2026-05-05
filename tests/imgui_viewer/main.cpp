@@ -3,13 +3,6 @@
 #include "Camera.hpp"
 #include "Hittable.hpp"
 #include "Renderer.hpp"
-#include "glm/ext/scalar_uint_sized.hpp"
-#include <SDL3/SDL_gpu.h>
-#include <SDL3/SDL_rect.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_video.h>
-#include <cstddef>
-#include <cstdint>
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_sdlrenderer3.h"
@@ -19,23 +12,25 @@
 #include <stdio.h>
 
 // CONSTANCE
-
-SDL_Window *g_Window;
-SDL_Renderer *g_Renderer;
-ImVec4 clear_color;
-ImGuiIO *g_Io;
-
 constexpr int g_windowWidth{1280};
 constexpr int g_windowHeight{720};
 
+SDL_Window *g_Window;
+SDL_Renderer *g_Renderer;
+SDL_Texture *g_Texture;
+SDL_Rect g_Rect{0, 0, g_windowWidth, g_windowHeight};
+ImVec4 clear_color;
+ImGuiIO *g_Io;
+
 HittableList world;
 
-RGBBuffer imageBuffer = RGBBuffer(g_windowWidth * g_windowHeight * 3);
+RGBBuffer g_ImageBuffer = RGBBuffer(g_windowWidth * g_windowHeight * 3);
 
 Camera cam(Vec3{0, -5, -30}, 1.6, 0.9, g_windowWidth, g_windowHeight, 0.8,
            Vec3{0, -1, 0}, Vec3{0, 0, 1}, 100);
 
-CPURenderer renderer(g_windowWidth, g_windowHeight, world, cam, imageBuffer, 7);
+CPURenderer renderer(g_windowWidth, g_windowHeight, world, cam, g_ImageBuffer,
+                     1);
 
 // FUNCTIONS
 
@@ -72,17 +67,10 @@ void initRayChasing() {
 void draw() {
   renderer.render();
 
-  for (size_t y{0}; y != g_windowHeight; ++y) {
-    for (size_t x{0}; x != g_windowWidth; ++x) {
-      SDL_FPoint p{static_cast<float>(x), static_cast<float>(y)};
-      size_t index = (y * g_windowWidth + x) * 3;
-      uint8_t r = imageBuffer[index + 0];
-      uint8_t g = imageBuffer[index + 1];
-      uint8_t b = imageBuffer[index + 2];
-      SDL_SetRenderDrawColor(g_Renderer, r, g, b, 255);
-      SDL_RenderPoints(g_Renderer, &p, 1);
-    }
-  }
+  SDL_UpdateTexture(g_Texture, &g_Rect, g_ImageBuffer.getData(),
+                    3 * g_windowWidth);
+  auto dstrect = SDL_FRect{0, 0, g_windowWidth, g_windowHeight};
+  SDL_RenderTexture(g_Renderer, g_Texture, NULL, &dstrect);
 }
 
 /* This function runs once at startup. */
@@ -115,6 +103,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   SDL_SetWindowPosition(g_Window, SDL_WINDOWPOS_CENTERED,
                         SDL_WINDOWPOS_CENTERED);
   SDL_ShowWindow(g_Window);
+
+  // Setup Texture
+  g_Texture = SDL_CreateTexture(g_Renderer, SDL_PIXELFORMAT_RGB24,
+                                SDL_TEXTUREACCESS_STREAMING, g_windowWidth,
+                                g_windowHeight);
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -185,6 +178,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     ImGui::Begin("te5t");
     ImGui::Text("ImText");
     ImGui::ColorEdit3("clear_color", &clear_color.x);
+    ImGui::Text("FPS: %.1f", g_Io->Framerate);
     ImGui::End();
   }
 
