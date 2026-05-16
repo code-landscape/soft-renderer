@@ -32,7 +32,6 @@ int main(int argc, char *argv[]) {
           0,
       },
       5, std::make_shared<Lambert>()));
-
   world.add(std::make_shared<Sphere>(
       Vec3{
           0,
@@ -40,22 +39,55 @@ int main(int argc, char *argv[]) {
           -15,
       },
       3, std::make_shared<Dielectric>()));
-
   world.add(std::make_shared<Sphere>(
       Vec3{
-          -9,
+          -10,
           -4.0001,
           0,
       },
       4, std::make_shared<Metal>()));
-
+  world.add(std::make_shared<Sphere>(
+      Vec3{
+          -15,
+          -3.0001,
+          -7,
+      },
+      3, std::make_shared<Metal>()));
+  world.add(std::make_shared<Sphere>(
+      Vec3{
+          -7,
+          -2.0001,
+          -14,
+      },
+      2, std::make_shared<Lambert>()));
+  world.add(std::make_shared<Sphere>(
+      Vec3{
+          10,
+          -3.0001,
+          0,
+      },
+      3, std::make_shared<Metal>()));
+  world.add(std::make_shared<Sphere>(
+      Vec3{
+          5,
+          -2.0001,
+          -10,
+      },
+      2, std::make_shared<Dielectric>()));
+  world.add(std::make_shared<Sphere>(
+      Vec3{
+          13,
+          -1.0001,
+          -5,
+      },
+      1, std::make_shared<Lambert>()));
   world.add(std::make_shared<Plane>(Vec3{0, 0, 0}, Vec3{0, -1, 0},
                                     std::make_shared<Lambert>()));
 
   // for loops
   auto imageBuffer = RGBBuffer(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 
-  CPURenderer renderer(IMAGE_WIDTH, IMAGE_HEIGHT, world, cam, imageBuffer, 60);
+  CPURenderer renderer(IMAGE_WIDTH, IMAGE_HEIGHT, world, cam, imageBuffer, 512);
 
   renderer.render();
 
