@@ -1,16 +1,19 @@
 #pragma once
 
 #include "Vector.hpp"
+#include "pcg/pcg_random.hpp"
 #include <random>
 
-inline double randomDouble(std::mt19937_64 &rng, double min, double max) {
+// NOTE: don't create static RNG instances in headers (per-TU constructors).
+// The global/thread-local RNG is managed in Renderer.cpp. Functions here
+// accept a reference to the engine type used by the renderer.
+
+inline double randomDouble(pcg32 &rng, double min, double max) {
   std::uniform_real_distribution<double> dist(min, max);
   return dist(rng);
 }
 
-inline Vec3 sphericalRand(std::mt19937_64 &rng) {
-  // radius is set to 1.0 by default, but can be changed by multiplying the
-  // result by the desired radius double theta =
+inline Vec3 sphericalRand(pcg32 &rng) {
   double theta = randomDouble(rng, 0, 6.283185307179586476925286766559);
   double phi = std::acos(randomDouble(rng, -1, 1));
 

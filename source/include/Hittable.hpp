@@ -6,7 +6,6 @@
 #include <cmath>
 #include <limits>
 #include <memory>
-#include <random>
 #include <vector>
 
 class Material;
@@ -109,13 +108,12 @@ private:
 
 class Material {
 public:
-  virtual bool scatter(std::mt19937_64 &rng, const Ray &r,
-                       const HitInfo &hitInf, Vec3 &attenuation,
-                       Ray &scattered) const = 0;
+  virtual bool scatter(pcg32 &rng, const Ray &r, const HitInfo &hitInf,
+                       Vec3 &attenuation, Ray &scattered) const = 0;
 };
 
 class Metal final : public Material {
-  bool scatter(std::mt19937_64 &rng, const Ray &r, const HitInfo &hitInf,
+  bool scatter(pcg32 &rng, const Ray &r, const HitInfo &hitInf,
                Vec3 &attenuation, Ray &scattered) const {
     Vec3 reflected = normalize(reflect(r.dir_, hitInf.n));
     scattered = {hitInf.p, reflected};
@@ -125,7 +123,7 @@ class Metal final : public Material {
 
 class Lambert final : public Material {
 public:
-  bool scatter(std::mt19937_64 &rng, const Ray &r, const HitInfo &hitInf,
+  bool scatter(pcg32 &rng, const Ray &r, const HitInfo &hitInf,
                Vec3 &attenuation, Ray &scattered) const final {
     attenuation = {0.75, 0.75, 0.75};
     scattered = {hitInf.p, hitInf.n + Vec3(sphericalRand(rng))};
@@ -134,7 +132,7 @@ public:
 };
 
 class Dielectric final : public Material {
-  bool scatter(std::mt19937_64 &rng, const Ray &r, const HitInfo &hitInf,
+  bool scatter(pcg32 &rng, const Ray &r, const HitInfo &hitInf,
                Vec3 &attenuation, Ray &scattered) const {
     double ri = hitInf.frontFace ? 1 / 1.5 : 1.5;
 
