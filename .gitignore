@@ -5,3 +5,5 @@ Image.ppm
 
 .cache/
 
+vcpkg_installed/
+
