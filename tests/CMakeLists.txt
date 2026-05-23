@@ -14,7 +14,6 @@ FetchContent_MakeAvailable(imgui)
 file(GLOB imgui_HEADERS ${imgui_SOURCE_DIR}/*h)
 file(GLOB imgui_SOURCES ${imgui_SOURCE_DIR}/*cpp)
 
-
 file(
   GLOB
   imgui_BACKENDS
@@ -37,8 +36,6 @@ target_include_directories(
   imgui
   PUBLIC
   ${imgui_SOURCE_DIR}
-  ${GLFW_SOURCE_DIR}/include
-  ${Vulkan_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -46,6 +43,7 @@ target_link_libraries(
   ${SDL3_LIBRARIES}
 )
 
+#InOneWeek
 project(
   InOneWeek
   CXX
@@ -62,6 +60,7 @@ target_link_libraries(
   imgui
 )
 
+#imgui_viewer
 project(
   imgui_viewer
   CXX

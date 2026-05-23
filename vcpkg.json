@@ -1,0 +1,8 @@
+{
+  "dependencies": [
+    "tbb",
+    "glm",
+    "spdlog",
+    "sdl3"
+  ]
+}
