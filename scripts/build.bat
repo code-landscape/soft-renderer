@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 set "BUILD_TYPE=Release"
-set "VCPKG_TRIPLET=x64-windows"
+
 
 set "SCRIPT_DIR=%~dp0"
 for /f "delims=" %%i in ("%SCRIPT_DIR%..") do set "PROJECT_DIR=%%~fi"
@@ -21,21 +21,18 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem Detect vcpkg root from VCPKG_ROOT env var, or derive from PATH
-if not defined VCPKG_ROOT (
-    where vcpkg >nul 2>nul
-    if not errorlevel 1 (
-        for /f "delims=" %%i in ('where vcpkg') do set "VCPKG_ROOT=%%~dpi.."
-    )
-)
-if not defined VCPKG_ROOT (
-    echo Error: vcpkg not found. Set VCPKG_ROOT or add vcpkg to PATH.
+rem Detect vcpkg from PATH
+where vcpkg >nul 2>nul
+if errorlevel 1 (
+    echo Error: vcpkg not found on PATH. Add vcpkg to your PATH or run bootstrap-vcpkg.bat first.
     exit /b 1
 )
-if not exist "%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" (
-    echo Error: vcpkg toolchain not found at "%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake"
+for /f "delims=" %%i in ('where vcpkg') do set "VCPKG_DIR=%%~dpi"
+if not exist "%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake" (
+    echo Error: vcpkg toolchain not found at "%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake"
     exit /b 1
 )
+
 
 rem === Ninja setup: PATH -> local cache -> download ===
 where ninja >nul 2>nul
@@ -72,8 +69,7 @@ cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G Ninja ^
     -DCMAKE_CXX_COMPILER=clang++ ^
     -DCMAKE_C_COMPILER=clang ^
     -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ^
-    -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" ^
-    -DVCPKG_TARGET_TRIPLET=%VCPKG_TRIPLET%
+    -DCMAKE_TOOLCHAIN_FILE="%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake"
 if errorlevel 1 (
     echo CMake configuration failed.
     exit /b 1
