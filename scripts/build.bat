@@ -1,133 +1,89 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
-REM ============================================================================
-REM Path Configuration
-REM ============================================================================
-
-REM SCRIPT_DIR: Directory where this batch file resides (scripts/)
-set "SCRIPT_DIR=%~dp0"
-
-REM PROJECT_DIR: Project root (parent of scripts/)
-set "PROJECT_DIR=%SCRIPT_DIR%.."
-
-REM BUILD_DIR: Output directory for CMake build artifacts
-set "BUILD_DIR=%SCRIPT_DIR%..\build"
-
-REM LLVM_DIR: Installation path of LLVM/Clang toolchain
-set "LLVM_DIR=C:\Program Files\LLVM"
-
-REM VCPKG_DIR: Root of vcpkg package manager (provides TBB, SDL3, etc.)
-set "VCPKG_DIR=C:\Users\ipxie\vcpkg"
-
-REM VCPKG_TRIPLET: Target architecture triplet for vcpkg
+set "BUILD_TYPE=Release"
 set "VCPKG_TRIPLET=x64-windows"
 
-REM ============================================================================
-REM Compiler Detection
-REM ============================================================================
+set "SCRIPT_DIR=%~dp0"
+for /f "delims=" %%i in ("%SCRIPT_DIR%..") do set "PROJECT_DIR=%%~fi"
+for /f "delims=" %%i in ("%SCRIPT_DIR%..\build") do set "BUILD_DIR=%%~fi"
+for /f "delims=" %%i in ("%SCRIPT_DIR%..\tools\ninja") do set "NINJA_DIR=%%~fi"
 
-REM Use LLVM Clang as the C++ compiler
-set "CLANGXX=%LLVM_DIR%\bin\clang++.exe"
-
-REM Use LLVM Clang as the C compiler
-set "CLANG=%LLVM_DIR%\bin\clang.exe"
-
-REM Bail early if clang++ is not installed
-if not exist "%CLANGXX%" (
-    echo Error: clang++ not found at %CLANGXX%
+rem === Pre-flight checks ===
+where clang++ >nul 2>nul
+if errorlevel 1 (
+    echo Error: clang++ not found on PATH. Install LLVM/Clang and add bin\ to your PATH.
+    exit /b 1
+)
+where cmake >nul 2>nul
+if errorlevel 1 (
+    echo Error: cmake not found on PATH.
     exit /b 1
 )
 
-REM ============================================================================
-REM Ninja Build System Setup
-REM ============================================================================
-
-REM Directory to cache a local Ninja download (fallback if not on PATH)
-set "NINJA_TOOL_DIR=%SCRIPT_DIR%..\tools\ninja"
-set "NINJA_EXE=%NINJA_TOOL_DIR%\ninja.exe"
-
-REM First, try to find Ninja on the system PATH (e.g., installed via WinGet)
-where ninja >nul 2>nul
-if %errorlevel% equ 0 (
-    set "NINJA_EXE=ninja"
-
-REM Fallback: use a previously cached local copy
-) else if exist "%NINJA_EXE%" (
-    set "PATH=%NINJA_TOOL_DIR%;%PATH%"
-
-REM Last resort: download Ninja from GitHub and cache it locally
-) else (
-    echo Downloading Ninja...
-    if not exist "%NINJA_TOOL_DIR%" mkdir "%NINJA_TOOL_DIR%"
-
-    REM Fetch the Ninja Windows binary zip from the official GitHub release
-    powershell -Command "Invoke-WebRequest -Uri 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip' -OutFile '%NINJA_TOOL_DIR%\ninja.zip'"
-    if %errorlevel% neq 0 (
-        echo Failed to download Ninja.
-        pause
-        exit /b 1
+rem Detect vcpkg root from VCPKG_ROOT env var, or derive from PATH
+if not defined VCPKG_ROOT (
+    where vcpkg >nul 2>nul
+    if not errorlevel 1 (
+        for /f "delims=" %%i in ('where vcpkg') do set "VCPKG_ROOT=%%~dpi.."
     )
-
-    REM Extract the zip and clean up
-    powershell -Command "Expand-Archive -Path '%NINJA_TOOL_DIR%\ninja.zip' -DestinationPath '%NINJA_TOOL_DIR%' -Force"
-    del "%NINJA_TOOL_DIR%\ninja.zip"
-
-    REM Verify extraction succeeded
-    if not exist "%NINJA_EXE%" (
-        echo Failed to extract Ninja.
-        pause
-        exit /b 1
-    )
-
-    REM Add the cached Ninja to PATH
-    set "PATH=%NINJA_TOOL_DIR%;%PATH%"
+)
+if not defined VCPKG_ROOT (
+    echo Error: vcpkg not found. Set VCPKG_ROOT or add vcpkg to PATH.
+    exit /b 1
+)
+if not exist "%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" (
+    echo Error: vcpkg toolchain not found at "%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake"
+    exit /b 1
 )
 
-REM ============================================================================
-REM CMake Configuration
-REM ============================================================================
+rem === Ninja setup: PATH -> local cache -> download ===
+where ninja >nul 2>nul
+if errorlevel 1 (
+    if exist "%NINJA_DIR%\ninja.exe" (
+        set "PATH=%NINJA_DIR%;%PATH%"
+    ) else (
+        if not exist "%NINJA_DIR%" mkdir "%NINJA_DIR%"
+        set "NINJA_URL=https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip"
+        set "NINJA_ZIP=%NINJA_DIR%\ninja.zip"
+        echo Downloading Ninja...
+        powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri '%NINJA_URL%' -OutFile '%NINJA_ZIP%' -UseBasicParsing -ErrorAction Stop"
+        if errorlevel 1 (
+            echo Error: Failed to download Ninja.
+            exit /b 1
+        )
+        powershell -NoProfile -Command "Expand-Archive -Path '%NINJA_ZIP%' -DestinationPath '%NINJA_DIR%' -Force"
+        if errorlevel 1 (
+            echo Error: Failed to extract Ninja archive.
+            del "%NINJA_ZIP%" 2>nul
+            exit /b 1
+        )
+        del "%NINJA_ZIP%"
+        if not exist "%NINJA_DIR%\ninja.exe" (
+            echo Error: ninja.exe not found after extraction.
+            exit /b 1
+        )
+        set "PATH=%NINJA_DIR%;%PATH%"
+    )
+)
 
-echo Configuring CMake with Ninja + LLVM clang + vcpkg...
-
-REM Key flags:
-REM   -G Ninja        : Use the Ninja build system (fast, parallel builds)
-REM   CMAKE_CXX_COMPILER : Force Clang as the C++ compiler
-REM   CMAKE_C_COMPILER   : Force Clang as the C compiler
-REM   CMAKE_BUILD_TYPE   : Release mode (optimized, no debug symbols)
-REM   CMAKE_TOOLCHAIN_FILE : vcpkg toolchain for automatic dependency resolution
-REM   VCPKG_TARGET_TRIPLET : x64-windows (64-bit Windows libraries)
-cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G Ninja -DCMAKE_CXX_COMPILER="%CLANGXX%" -DCMAKE_C_COMPILER="%CLANG%" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=%VCPKG_TRIPLET%
-
-REM Abort on configuration failure
+rem === CMake configure ===
+cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G Ninja ^
+    -DCMAKE_CXX_COMPILER=clang++ ^
+    -DCMAKE_C_COMPILER=clang ^
+    -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ^
+    -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" ^
+    -DVCPKG_TARGET_TRIPLET=%VCPKG_TRIPLET%
 if errorlevel 1 (
     echo CMake configuration failed.
-    pause
     exit /b 1
 )
 
-REM ============================================================================
-REM Build
-REM ============================================================================
-
-echo Building project...
-
-REM Invoke Ninja via CMake to compile all targets
-cmake --build "%BUILD_DIR%" --config Release
-
-REM Abort on build failure
+rem === Build ===
+cmake --build "%BUILD_DIR%" --config %BUILD_TYPE%
 if errorlevel 1 (
     echo Build failed.
-    pause
     exit /b 1
 )
 
-REM ============================================================================
-REM Success
-REM ============================================================================
-
-echo.
-echo Build successful.
-
-REM Keep the terminal open so the user can inspect the output
-pause
+echo. && echo Build successful.
