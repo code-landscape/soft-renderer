@@ -24,7 +24,7 @@ ImGuiIO *g_Io;
 
 HittableList world;
 
-RGBBuffer g_ImageBuffer = RGBBuffer(g_windowWidth * g_windowHeight * 3);
+Buffer<uint8_t> g_ImageBuffer(g_windowWidth * g_windowHeight * 3);
 
 Camera cam(Vec3{0, -5, -30}, 1.6, 0.9, g_windowWidth, g_windowHeight, 0.8,
            Vec3{0, -1, 0}, Vec3{0, 0, 1}, 100);

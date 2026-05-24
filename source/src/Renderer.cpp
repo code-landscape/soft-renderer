@@ -1,36 +1,9 @@
 
 #include "Renderer.hpp"
-#include "pcg/pcg_extras.hpp"
-#include <pcg/pcg_random.hpp>
-#include <random>
 #include <algorithm>
+#include <cstddef>
+#include <pcg/pcg_random.hpp>
 
-pcg_extras::seed_seq_from<std::random_device> randomSeed;
-thread_local pcg32 rng(randomSeed);
-
-Vec3 rayColor(size_t depth, Ray r, Vec3 attenuation, HittableList &world) {
-
-  if (depth == 1000)
-    return {1, 0, 1};
-  depth++;
-
-  Ray scattered;
-  HitInfo hitInf{};
-  bool hit = world.hit(r, 0.0001, std::numeric_limits<double>::max(), hitInf);
-  if (hit) {
-    if (hitInf.mat->scatter(rng, r, hitInf, attenuation, scattered))
-      return attenuation * rayColor(depth, scattered, attenuation, world);
-  } else {
-    auto a = 0.5 * (normalize(r.dir_).y + 1);
-    Vec3 down{0.5, 0.7, 1.0};
-    Vec3 up{1, 1, 1.0};
-    return a * down + (1 - a) * up;
-    return {1, 1, 1};
-  }
-  return {1, 0, 0};
-}
-
-// Create tiles that partition the image. Tiles are stored in tiles_.
 void CPURenderer::splitIntoTiles(size_t tileWidth, size_t tileHeight) {
   tiles_.clear();
   for (size_t y = 0; y < imageHeight_; y += tileHeight) {
@@ -42,15 +15,15 @@ void CPURenderer::splitIntoTiles(size_t tileWidth, size_t tileHeight) {
   }
 }
 
-// Render the given tile into the shared image buffer. This is safe to call
-// concurrently for disjoint tiles because each pixel is written only once.
 void CPURenderer::renderTiles(Tile &tile, Camera &cam, HittableList &world_) {
   for (size_t y = tile.fromY_; y < tile.fromY_ + tile.height_; ++y) {
     for (size_t x = tile.fromX_; x < tile.fromX_ + tile.width_; ++x) {
       Vec3 col{0.0, 0.0, 0.0};
       for (size_t s = 0; s < spp_; ++s) {
         Ray r = cam.getRay(x, y);
-        col += rayColor(0, r, Vec3{1.0, 1.0, 1.0}, world_);
+        auto &seed = pcg32Buffer[y * imageWidth_ + x];
+        col += rayColor(0, seed, r, Vec3{1.0, 1.0, 1.0});
+        seed.discard(1);
       }
       col /= static_cast<double>(spp_);
 
@@ -61,4 +34,26 @@ void CPURenderer::renderTiles(Tile &tile, Camera &cam, HittableList &world_) {
       imageBuffer_[index + 2] = toByte(col.z);
     }
   }
+}
+
+Vec3 CPURenderer::rayColor(size_t depth, pcg32 &rng, Ray r, Vec3 attenuation) {
+
+  if (depth == 1000)
+    return {1, 0, 1};
+  depth++;
+
+  Ray scattered;
+  HitInfo hitInf{};
+  bool hit = world_.hit(r, 0.0001, std::numeric_limits<double>::max(), hitInf);
+  if (hit) {
+    if (hitInf.mat->scatter(rng, r, hitInf, attenuation, scattered))
+      return attenuation * rayColor(depth, rng, scattered, attenuation);
+  } else {
+    auto a = 0.5 * (normalize(r.dir_).y + 1);
+    Vec3 down{0.5, 0.7, 1.0};
+    Vec3 up{1, 1, 1.0};
+    return a * down + (1 - a) * up;
+    return {1, 1, 1};
+  }
+  return {1, 0, 0};
 }

@@ -14,7 +14,7 @@ HittableList world;
 // constants
 constexpr size_t IMAGE_WIDTH{3840};
 constexpr size_t IMAGE_HEIGHT{2160};
-constexpr size_t SPP{31};
+constexpr size_t SPP{1024};
 
 int main(int argc, char *argv[]) {
 
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 
   // camera
   Camera cam(Vec3{0, -5, -30}, 1.6, 0.9, IMAGE_WIDTH, IMAGE_HEIGHT, 0.8,
-             Vec3{0, -1, 0}, Vec3{0, 0, 1}, 100);
+             Vec3{0, -1, 0}, Vec3{0, 0, 1}, 10);
 
   world.add(std::make_shared<Sphere>(
       Vec3{
@@ -85,9 +85,9 @@ int main(int argc, char *argv[]) {
                                     std::make_shared<Lambert>()));
 
   // for loops
-  auto imageBuffer = RGBBuffer(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
+  Buffer<uint8_t> imageBuffer(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 
-  CPURenderer renderer(IMAGE_WIDTH, IMAGE_HEIGHT, world, cam, imageBuffer, 512);
+  CPURenderer renderer(IMAGE_WIDTH, IMAGE_HEIGHT, world, cam, imageBuffer, SPP);
 
   renderer.render();
 
