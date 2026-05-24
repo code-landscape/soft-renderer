@@ -24,7 +24,7 @@ ImGuiIO *g_Io;
 
 HittableList world;
 
-Buffer<uint8_t> g_ImageBuffer(g_windowWidth * g_windowHeight * 3);
+Buffer<CPURenderer::Pixel> g_ImageBuffer(g_windowWidth *g_windowHeight);
 
 Camera cam(Vec3{0, -5, -30}, 1.6, 0.9, g_windowWidth, g_windowHeight, 0.8,
            Vec3{0, -1, 0}, Vec3{0, 0, 1}, 100);
@@ -67,7 +67,7 @@ void initRayChasing() {
 void draw() {
   renderer.render();
 
-  SDL_UpdateTexture(g_Texture, &g_Rect, g_ImageBuffer.getData(),
+  SDL_UpdateTexture(g_Texture, &g_Rect, g_ImageBuffer.getRawData(),
                     3 * g_windowWidth);
   auto dstrect = SDL_FRect{0, 0, g_windowWidth, g_windowHeight};
   SDL_RenderTexture(g_Renderer, g_Texture, NULL, &dstrect);
@@ -79,7 +79,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   initRayChasing();
 
   // Setup SDL
-  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
+  if (!SDL_Init(SDL_INIT_VIDEO)) {
     printf("Error: SDL_Init(): %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
@@ -87,7 +87,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   // Create window with SDL_Renderer graphics context
   float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
   SDL_WindowFlags window_flags =
-      SDL_WINDOW_BORDERLESS | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+      SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
   g_Window = SDL_CreateWindow("Dear ImGui SDL3+SDL_Renderer example",
                               g_windowWidth, g_windowHeight, window_flags);
   if (g_Window == nullptr) {

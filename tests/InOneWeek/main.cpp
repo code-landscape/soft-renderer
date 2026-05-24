@@ -85,14 +85,14 @@ int main(int argc, char *argv[]) {
                                     std::make_shared<Lambert>()));
 
   // for loops
-  Buffer<uint8_t> imageBuffer(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
+  Buffer<CPURenderer::Pixel> imageBuffer(IMAGE_WIDTH * IMAGE_HEIGHT);
 
   CPURenderer renderer(IMAGE_WIDTH, IMAGE_HEIGHT, world, cam, imageBuffer, SPP);
 
   renderer.render();
 
-  Imagefile.write(reinterpret_cast<const char *>(imageBuffer.getData()),
-                  imageBuffer.getSize());
+  Imagefile.write(reinterpret_cast<const char *>(imageBuffer.getRawData()),
+                  imageBuffer.getSize() * sizeof(CPURenderer::Pixel));
   Imagefile.close();
   return 0;
 }

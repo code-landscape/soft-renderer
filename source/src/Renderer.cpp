@@ -4,6 +4,20 @@
 #include <cstddef>
 #include <pcg/pcg_random.hpp>
 
+CPURenderer::CPURenderer(size_t imageWidth, size_t imageHeight,
+                         HittableList &world, Camera &cam,
+                         Buffer<Pixel> &imageBuffer, size_t spp)
+    : imageWidth_(imageWidth), imageHeight_(imageHeight), world_(world),
+      cam_(cam), imageBuffer_(imageBuffer), pcg32Buffer(imageBuffer.getSize()),
+      spp_(spp) {
+
+  splitIntoTiles(64, 64);
+  std::random_device rd;
+  pcg32 master(rd());
+  for (auto &pcg : pcg32Buffer.getData()) {
+    pcg.seed(master());
+  }
+}
 void CPURenderer::splitIntoTiles(size_t tileWidth, size_t tileHeight) {
   tiles_.clear();
   for (size_t y = 0; y < imageHeight_; y += tileHeight) {
@@ -27,11 +41,8 @@ void CPURenderer::renderTiles(Tile &tile, Camera &cam, HittableList &world_) {
       }
       col /= static_cast<double>(spp_);
 
-      // Write into RGB buffer (row-major, 3 bytes per pixel)
-      size_t index = (y * imageWidth_ + x) * 3;
-      imageBuffer_[index + 0] = toByte(col.x);
-      imageBuffer_[index + 1] = toByte(col.y);
-      imageBuffer_[index + 2] = toByte(col.z);
+      imageBuffer_[y * imageWidth_ + x] =
+          Pixel{toByte(col.x), toByte(col.y), toByte(col.z)};
     }
   }
 }
@@ -56,4 +67,9 @@ Vec3 CPURenderer::rayColor(size_t depth, pcg32 &rng, Ray r, Vec3 attenuation) {
     return {1, 1, 1};
   }
   return {1, 0, 0};
+}
+bool CPURenderer::render() {
+  tbb::parallel_for(size_t(0), tiles_.size(),
+                    [this](size_t i) { renderTiles(tiles_[i], cam_, world_); });
+  return true;
 }
