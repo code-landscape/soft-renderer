@@ -3,6 +3,8 @@ build/
 
 Image.ppm
 
+imgui.ini
+
 .cache/
 
 vcpkg_installed/
