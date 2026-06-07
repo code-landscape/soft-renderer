@@ -46,6 +46,7 @@ add_library(
   ./source/include/Ray.hpp
   ./source/include/Vector.hpp
   ./source/include/Renderer.hpp
+  ./source/include/Interval.hpp
   ./source/src/Renderer.cpp
   ./source/include/pcg/pcg_extras.hpp
   ./source/include/pcg/pcg_uint128.hpp

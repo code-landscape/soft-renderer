@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Interval.hpp"
 #include "Random.hpp"
 #include "Ray.hpp"
 #include "Vector.hpp"
 #include <cmath>
+#include <deque>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -21,10 +23,25 @@ public:
   virtual bool hit(Ray &r, double tMin, double tMax, HitInfo &hitInf) const = 0;
 };
 
+class Bbox;
 class HittableList : public Hittable {
 public:
   HittableList() = default;
   void add(std::shared_ptr<Hittable> object) { objects_.push_back(object); }
+  void BVH() {
+    HittableList result;
+    // result.add(std::make_shared<Bbox>(box, nullptr, nullptr))
+
+    // TODO handle this grossing recursion!!!
+    // in split(): pra: a HittableList
+    // check sizeof left and right
+    // if >3 split it(left or right)
+    // get splitted left and right
+    // split left and right again
+    // then get aabb range(by merging child node)
+    // return two HittableList
+    // end def
+  }
   bool hit(Ray &r, double tMin, double tMax, HitInfo &hitInf) const {
     bool hitAnyThing{false};
     for (auto &obj : objects_) {
@@ -36,6 +53,55 @@ public:
 
 private:
   std::vector<std::shared_ptr<Hittable>> objects_;
+};
+
+class Bbox : public Hittable {
+public:
+  Bbox(AABB box, std::shared_ptr<HittableList> left,
+       std::shared_ptr<HittableList> right)
+      : box_(box), right_(right), left_(left) {}
+
+  bool hit(Ray &r, double tMin, double tMax, HitInfo &hitInf) const override {
+    double root0;
+    double root1;
+
+    {
+      root0 = (box_.x_.min_ - r.orig_.x) / r.dir_.x;
+      root1 = (box_.x_.max_ - r.orig_.x) / r.dir_.x;
+      if (root0 > root1)
+        std::swap(root0, root1);
+    }
+    {
+      double t0 = (box_.y_.min_ - r.orig_.y) / r.dir_.y;
+      double t1 = (box_.y_.max_ - r.orig_.y) / r.dir_.y;
+      if (t0 > t1)
+        std::swap(t0, t1);
+      root0 = std::max(root0, t0);
+      root1 = std::min(root1, t1);
+    }
+    {
+      double t0 = (box_.z_.min_ - r.orig_.z) / r.dir_.z;
+      double t1 = (box_.z_.max_ - r.orig_.z) / r.dir_.z;
+      if (t0 > t1)
+        std::swap(t0, t1);
+      root0 = std::max(root0, t0);
+      root1 = std::min(root1, t1);
+    }
+    bool hitAnyThing = root0 < root1;
+    if (!hitAnyThing)
+      return false;
+    hitAnyThing = false;
+    if (left_ != nullptr && !hitAnyThing)
+      hitAnyThing = left_->hit(r, root0, root1, hitInf);
+    if (right_ != nullptr && !hitAnyThing)
+      right_->hit(r, tMin, tMax, hitInf);
+    return hitAnyThing;
+  }
+
+private:
+  AABB box_;
+  std::shared_ptr<HittableList> left_;
+  std::shared_ptr<HittableList> right_;
 };
 
 class Sphere final : public Hittable {
